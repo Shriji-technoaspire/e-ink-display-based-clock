@@ -1,0 +1,47 @@
+#include <Wire.h>
+#include "RTClib.h"
+ 
+RTC_DS3231 rtc;
+ 
+// I'm going to declare two arrays with the name of the days and the names of the months.
+// As I should clean the litters, at least twice a week
+// I'm not interested into getting the day of the month number instead of the name of the day in the week
+String daysOfTheWeek[7] = { "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY" };
+String monthsNames[12] = {"FEBRUARY", "MARCH", "APRIL", "MAY",  "JUNE", "JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER","JANUARY" };
+int monthNumber = 1;
+String currentDate = "";
+String currentDay = "";
+ 
+void setup() {
+  delay(4000); // I'm giving it some time before it does starts sending things to the main Arduino
+   Serial.begin(115200); // I've tried with bigger baud rates, and it eventually worked 1 of every 20 times
+ 
+   if (!rtc.begin()) {
+      while (1);
+   }
+ 
+   if (rtc.lostPower()) {
+      rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+   }
+}
+ 
+
+void printDate(DateTime date)
+{
+  monthNumber = (date.month(), DEC) - 1;
+  currentDay = (date.day(), DEC);
+  currentDate = currentDay + " " + (monthsNames[monthNumber]); //I create a string with the current day + the month name
+   Serial.print(daysOfTheWeek[date.dayOfTheWeek()]);
+   Serial.print("\n");// I also add this line break charachter for the screen
+   Serial.print(date.day(), DEC);
+   Serial.print(" ");
+   Serial.println(monthsNames[monthnumber]);
+}
+ 
+void loop() {
+   // Get the current date and send it via Serial
+   DateTime now = rtc.now();
+   printDate(now);
+   delay(2000);
+}
+
