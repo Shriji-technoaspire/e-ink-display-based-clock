@@ -1,0 +1,66 @@
+#include <string.h>
+#include <GxEPD.h>
+#include <GxGDEH029A1/GxGDEH029A1.h>      // 2.9" b/w
+#include <GxIO/GxIO_SPI/GxIO_SPI.h>
+#include <GxIO/GxIO.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
+
+// constructor for AVR Arduino, copy from GxEPD_Example else
+GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of 8, 9 selected for default of GxEPD_Class
+GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
+String currentDate;
+
+void setup()
+{
+  pinMode(3, OUTPUT);
+  digitalWrite(3, LOW); //I turn the realy pin on, so now there's no need to keep the push button pressed
+  Serial.begin(115200);
+  delay(2000);
+  display.init();
+  display.eraseDisplay(); //This works fine beacuse the screen flashes.
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH); //With this instruction I turn the second Arduino on.
+}
+
+void drawHelloWorld()
+{
+  display.fillScreen(GxEPD_WHITE);
+  display.setTextColor(GxEPD_BLACK);
+  display.setFont(&FreeMonoBold12pt7b);
+  display.setRotation(15);
+  display.setCursor(0, 15);
+  display.print("LITTERS CLEANED:");
+  display.setCursor(0, 70);
+  display.setFont(&FreeMonoBold24pt7b);
+  display.print(currentDate);
+  delay(10000); // I give it some time to update the e-ink display
+  digitalWrite(3, HIGH); //Finally I turn down the whole system desactivating the relay
+}
+
+
+void drawHelloWorld0() // If I call this function as a welcome screen, it always works 
+{
+  display.fillScreen(GxEPD_BLACK);
+  display.setTextColor(GxEPD_WHITE);
+  display.setFont(&FreeMonoBold24pt7b);
+  display.setRotation(15);
+  display.setCursor(0, 25);
+  display.print("   _/)\n (^.^) MIU\n       MIU");
+  display.setCursor(37, 25);
+  display.print("/)");
+  display.setCursor(58, 100);
+  display.print(">^<");
+  display.setCursor(15, 120);
+  display.print("(    )");
+}
+
+void loop() {
+  while (Serial.available()) {
+    currentDate= Serial.readString();
+    delay(3);
+    if (currentDate.length() > 5) { //just a little checking to see if the is longer that a simple char
+      display.drawPaged(drawHelloWorld); // version for AVR using paged drawing, works also on other processors
+    }
+  }
+}
